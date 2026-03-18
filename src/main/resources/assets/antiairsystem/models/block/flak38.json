@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "antiairsystem:models/block/flak38.obj",
+  "textures": {
+    "particle": "antiairsystem:model/flak38_texture",
+    "#ger_btry_flak38_turret_col": "antiairsystem:model/flak38_texture"
+  },
+  "render_type": "cutout"
+}

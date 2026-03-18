@@ -1,0 +1,9 @@
+# Flak 38 Material
+newmtl ger_btry_flak38_turret_col
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+Ns 10.000
+d 1.000
+illum 2
+map_Kd antiairsystem:model/flak38_texture

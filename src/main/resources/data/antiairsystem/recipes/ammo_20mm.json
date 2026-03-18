@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "III",
+    "III"
+  ],
+  "key": {
+    "G": {"item": "minecraft:gunpowder"},
+    "I": {"item": "minecraft:iron_ingot"}
+  },
+  "result": {
+    "item": "antiairsystem:ammo_20mm",
+    "count": 4
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "item.antiairsystem.flak38": "Flak 38 Anti-Air Gun",
+  "item.antiairsystem.ammo_20mm": "20mm Ammo Magazine",
+  "item.antiairsystem.repair_kit": "Repair Kit",
+  "entity.antiairsystem.flak38": "Flak 38",
+  "itemGroup.antiairsystem.anti_air_tab": "Anti-Air System"
+}

@@ -1,0 +1,46 @@
+{
+  "flak38_shoot": {
+    "subtitle": "Flak 38 fires",
+    "sounds": [
+      {
+        "name": "antiairsystem:20mm_shoot_1",
+        "volume": 1.5,
+        "pitch": 1.0,
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "flak38_stop": {
+    "subtitle": "Flak 38 ceases fire",
+    "sounds": [
+      {
+        "name": "antiairsystem:20mm_stop_1",
+        "volume": 1.2,
+        "pitch": 1.0,
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "ammo_reload_start": {
+    "subtitle": "Magazine inserted",
+    "sounds": [
+      {
+        "name": "antiairsystem:reload",
+        "volume": 1.0,
+        "pitch": 1.0,
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "ammo_reload_end": {
+    "subtitle": "Magazine locked",
+    "sounds": [
+      {
+        "name": "antiairsystem:reloadend",
+        "volume": 1.0,
+        "pitch": 1.0,
+        "attenuation_distance": 24
+      }
+    ]
+  }
+}
