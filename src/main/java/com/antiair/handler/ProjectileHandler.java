@@ -104,6 +104,18 @@ public class ProjectileHandler {
             Vec3 corrected = vel.normalize().scale(FLAK38_ROCKET_SPEED);
             rocket.setDeltaMovement(corrected);
 
+            // --- Uçak hitbox çarpışma kontrolü — tek vuruşta imha ---
+            if (AircraftDetector.isImmersiveAircraftLoaded()) {
+                Vec3 rocketPos = rocket.position();
+                AABB rocketBox = rocket.getBoundingBox().inflate(0.5);
+                for (Entity target : level.getEntities(rocket, rocketBox,
+                        e -> AircraftDetector.isAircraft(e) && e.isAlive())) {
+                    destroyAircraftOnImpact(rocket, target, level);
+                    break;
+                }
+                if (!rocket.isAlive()) continue;
+            }
+
             // --- Trail parçacıkları ---
             Vec3 pos = rocket.position();
             level.sendParticles(ParticleTypes.CRIT,  pos.x, pos.y, pos.z, 2, 0.05, 0.05, 0.05, 0.01);
@@ -167,6 +179,47 @@ public class ProjectileHandler {
             if (!hit)   hit = target.hurt(level.damageSources().generic(),            damage);
             if (!hit)         target.hurt(level.damageSources().magic(),              damage);
         }
+    }
+
+    /**
+     * Flak38 mermisi uçağa isabet ettiğinde: uçağı tek vuruşta imha eder.
+     * Büyük patlama efekti + uçağı öldürür + mermiyi siler.
+     */
+    private void destroyAircraftOnImpact(FireworkRocketEntity rocket, Entity aircraft, ServerLevel level) {
+        Vec3 impactPos = rocket.position();
+        Entity owner = rocket.getOwner();
+
+        // Patlama görseli
+        level.broadcastEntityEvent(rocket, (byte) 17);
+
+        // Sesler
+        level.playSound(null, impactPos.x, impactPos.y, impactPos.z,
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 3.0f, 0.8f);
+        level.playSound(null, impactPos.x, impactPos.y, impactPos.z,
+                SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.AMBIENT, 2.0f, 1.0f);
+
+        // Parçacıklar — büyük patlama efekti
+        level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impactPos.x, impactPos.y, impactPos.z, 1, 0, 0, 0, 0);
+        level.sendParticles(ParticleTypes.FLAME,     impactPos.x, impactPos.y, impactPos.z, 40, 2.0, 2.0, 2.0, 0.05);
+        level.sendParticles(ParticleTypes.LARGE_SMOKE, impactPos.x, impactPos.y, impactPos.z, 30, 2.0, 2.0, 2.0, 0.02);
+        level.sendParticles(ParticleTypes.LAVA,      impactPos.x, impactPos.y, impactPos.z, 15, 1.5, 1.5, 1.5, 0.0);
+
+        // Gerçek patlama — blok ve entity hasarı
+        level.explode(owner, impactPos.x, impactPos.y, impactPos.z,
+                3.0f, false, Level.ExplosionInteraction.MOB);
+
+        // Uçağı doğrudan öldür — çok yüksek hasar, birden fazla kaynak dene
+        float killDamage = 9999.0f;
+        boolean hit = aircraft.hurt(level.damageSources().explosion(rocket, owner), killDamage);
+        if (!hit) hit = aircraft.hurt(level.damageSources().generic(), killDamage);
+        if (!hit) hit = aircraft.hurt(level.damageSources().magic(), killDamage);
+        if (!hit) {
+            // Hiçbir damage source çalışmazsa zorla öldür
+            aircraft.kill();
+        }
+
+        // Mermiyi sil
+        rocket.discard();
     }
 
     private void processAntiAirArrows(ServerLevel level) {
@@ -252,12 +305,20 @@ public class ProjectileHandler {
             return;
         }
 
-        // Flak38 FireworkRocket için özel impact işlemi yapılmıyor.
-        // Vanilla FireworkRocketEntity.explode() tam olarak istenen davranışı sağlıyor:
-        //   • onHitBlock / onHitEntity → anında explode()
-        //   • lifetime dolduğunda    → anında explode()
-        // explode() → broadcastEntityEvent(17) → istemcide vanilladaki firework patlama efekti
-        //           → 5 blok yarıçapında explosion charge sayısına göre alan hasarı
-        // Trajectory kontrolü processFlak38Projectiles() tarafından yapılmaya devam ediyor.
+        // ── B) Flak38 FireworkRocket → uçağa çarparsa tek vuruşta imha ────────
+        if (projectile instanceof FireworkRocketEntity rocket) {
+            CompoundTag data = rocket.getPersistentData();
+            if (!data.getBoolean("flak38_firework")) return;
+
+            Entity hitEntity = event.getRayTraceResult() instanceof EntityHitResult entityHit
+                    ? entityHit.getEntity() : null;
+
+            if (hitEntity != null && AircraftDetector.isImmersiveAircraftLoaded()
+                    && AircraftDetector.isAircraft(hitEntity) && hitEntity.isAlive()) {
+                ServerLevel serverLevel = (ServerLevel) rocket.level();
+                destroyAircraftOnImpact(rocket, hitEntity, serverLevel);
+                event.setCanceled(true);
+            }
+        }
     }
 }
